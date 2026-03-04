@@ -2,6 +2,7 @@
 
 from datetime import date
 
+import io
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import Input, Output, callback, html
@@ -55,7 +56,7 @@ def render_resumen(df_json: str | None, datos: dict | None) -> html.Div:
     if not df_json or not datos:
         return html.Div()
 
-    df = pd.read_json(df_json, orient="records")
+    df = pd.read_json(io.StringIO(df_json), orient="records")
     df["fecha_inicio"] = pd.to_datetime(df["fecha_inicio"])
     df["fecha_fin"] = pd.to_datetime(df["fecha_fin"])
 

@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 
+import io
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
@@ -14,7 +15,7 @@ from src.normativa import calcular_gaps, semanas_requeridas, descuento_semanas_p
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _parse_df(df_json: str, datos: dict) -> tuple[pd.DataFrame, str, int]:
-    df = pd.read_json(df_json, orient="records")
+    df = pd.read_json(io.StringIO(df_json), orient="records")
     df["fecha_inicio"] = pd.to_datetime(df["fecha_inicio"])
     df["fecha_fin"] = pd.to_datetime(df["fecha_fin"])
     sexo = datos.get("sexo", "M")

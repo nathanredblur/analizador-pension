@@ -55,7 +55,7 @@ def render_sidebar(df_json: str | None) -> list:
             html.Tbody(filas),
             size="sm",
             borderless=True,
-            dark=True,
+            color="dark",
             className="mb-0",
             style={"fontSize": "0.72rem"},
         ),

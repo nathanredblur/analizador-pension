@@ -7,8 +7,6 @@ from datetime import date
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html, callback
 
-from src.app import app  # noqa: F401 — importado para registrar callbacks
-
 
 def layout() -> dbc.Container:
     """Pantalla inicial: upload + datos personales."""
@@ -161,19 +159,52 @@ def procesar_pdf(
     sexo: str,
     n_hijos: int | None,
 ) -> tuple:
+    import os
+    import tempfile
+    from pathlib import Path
+
+    from src.extractor import ExtractionError, extract_semanas_df
+
+    def _alerta(titulo: str, detalle: str, color: str = "danger") -> dbc.Alert:
+        return dbc.Alert([
+            html.Strong(titulo),
+            html.Br(),
+            html.Small(detalle, className="text-muted"),
+        ], color=color, dismissable=True)
+
     if not pdf_contents:
-        return None, None, dbc.Alert("Selecciona un archivo PDF.", color="warning")
+        return None, None, _alerta(
+            "Selecciona un archivo PDF.",
+            "Arrastra o haz clic en el área de carga para subir tu PDF de Colpensiones.",
+            color="warning",
+        )
+
+    # Validar que sea un PDF por extensión y cabecera
+    fname = filename or ""
+    if not fname.lower().endswith(".pdf"):
+        return None, None, _alerta(
+            "Formato incorrecto.",
+            f"El archivo «{fname}» no es un PDF. Solo se aceptan archivos .pdf de Colpensiones.",
+        )
 
     try:
-        from pathlib import Path
-        from src.extractor import extract_semanas_df, ExtractionError
-
-        # Decodificar base64 del upload
         _header, b64_data = pdf_contents.split(",", 1)
         pdf_bytes = base64.b64decode(b64_data)
+    except Exception:
+        return None, None, _alerta(
+            "Error al leer el archivo.",
+            "No se pudo decodificar el archivo. Intenta de nuevo.",
+        )
 
-        # Guardar temporalmente en memoria para extractor
-        import tempfile, os
+    # Validar cabecera PDF (%PDF-)
+    if not pdf_bytes.startswith(b"%PDF-"):
+        return None, None, _alerta(
+            "El archivo no es un PDF válido.",
+            f"El archivo «{fname}» no tiene el formato PDF esperado. "
+            "Descarga el PDF directamente desde la app de Colpensiones.",
+        )
+
+    try:
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp.write(pdf_bytes)
             tmp_path = Path(tmp.name)
@@ -183,17 +214,43 @@ def procesar_pdf(
         finally:
             os.unlink(tmp_path)
 
-        datos_usuario = {
-            "nombre": nombre or "",
-            "fecha_nac": fecha_nac or "",
-            "sexo": sexo,
-            "n_hijos": int(n_hijos or 0),
-        }
-
-        return df.to_json(date_format="iso", orient="records"), datos_usuario, ""
-
-    except Exception as exc:  # noqa: BLE001
-        return None, None, dbc.Alert(
-            [html.Strong("Error al procesar el PDF: "), str(exc)],
-            color="danger",
+    except ExtractionError as exc:
+        msg = str(exc).lower()
+        if "password" in msg or "contrase" in msg or "incorrect" in msg or "encrypt" in msg:
+            return None, None, _alerta(
+                "Contraseña incorrecta.",
+                "El PDF está protegido con contraseña. Ingresa tu número de cédula "
+                "(sin puntos ni espacios) en el campo 'Contraseña del PDF'.",
+            )
+        if "no table" in msg or "no se encontr" in msg or "tabla" in msg:
+            return None, None, _alerta(
+                "No se encontró la tabla de semanas cotizadas.",
+                "El PDF no parece ser el reporte de semanas cotizadas de Colpensiones. "
+                "Descárgalo desde Mi Colpensiones → Historial de cotizaciones.",
+            )
+        return None, None, _alerta(
+            "Error al extraer los datos del PDF.",
+            f"Detalle técnico: {exc}",
         )
+    except Exception as exc:  # noqa: BLE001
+        return None, None, _alerta(
+            "Error inesperado al procesar el PDF.",
+            f"Detalle: {exc}",
+        )
+
+    if df.empty or df["semanas"].sum() == 0:
+        return None, None, _alerta(
+            "El PDF no contiene semanas cotizadas.",
+            "Se procesó el archivo pero no se encontraron registros de cotización. "
+            "Verifica que sea el reporte correcto.",
+            color="warning",
+        )
+
+    datos_usuario = {
+        "nombre": nombre or "",
+        "fecha_nac": fecha_nac or "",
+        "sexo": sexo,
+        "n_hijos": int(n_hijos or 0),
+    }
+
+    return df.to_json(date_format="iso", orient="records"), datos_usuario, ""

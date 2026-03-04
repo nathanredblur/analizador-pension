@@ -1,5 +1,6 @@
 """Sección 4 — Proyección Pensional: mesada futura, inflación, canasta."""
 
+import io
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
@@ -66,14 +67,16 @@ def _fig_canasta(mesada: float, estrato: int) -> go.Figure:
 
 @callback(
     Output("seccion-proyeccion", "children"),
+    Output("store-mesada-media", "data"),
+    Output("store-anios-restantes", "data"),
     Input("store-df-semanas", "data"),
     Input("store-datos-usuario", "data"),
 )
-def render_proyeccion(df_json: str | None, datos: dict | None) -> html.Div:
+def render_proyeccion(df_json: str | None, datos: dict | None) -> tuple:
     if not df_json or not datos:
-        return html.Div()
+        return html.Div(), None, None
 
-    df = pd.read_json(df_json, orient="records")
+    df = pd.read_json(io.StringIO(df_json), orient="records")
     df["fecha_inicio"] = pd.to_datetime(df["fecha_inicio"])
     df["fecha_fin"] = pd.to_datetime(df["fecha_fin"])
 
@@ -95,7 +98,7 @@ def render_proyeccion(df_json: str | None, datos: dict | None) -> html.Div:
     smmlv_min = calcular_smmlv_equivalente(mesada_min, anio=anio_actual)
     smmlv_max = calcular_smmlv_equivalente(mesada_max, anio=anio_actual)
 
-    return html.Div([
+    layout = html.Div([
         html.H5("📈 Proyección Pensional", className="mb-3"),
         dbc.Row([
             dbc.Col(dbc.Card(dbc.CardBody([
@@ -132,10 +135,8 @@ def render_proyeccion(df_json: str | None, datos: dict | None) -> html.Div:
             ], md=12),
         ]),
         dcc.Graph(id="grafica-canasta", config={"displayModeBar": False}),
-        # Store oculto con mesada media para que ahorro.py la use
-        dcc.Store(id="store-mesada-media", data=mesada_media),
-        dcc.Store(id="store-anios-restantes", data=anios_rest),
     ])
+    return layout, mesada_media, anios_rest
 
 
 @callback(
@@ -148,7 +149,7 @@ def actualizar_mesada_inflacion(inflacion_pct: int, df_json: str | None, datos: 
     if not df_json:
         return html.Div()
 
-    df = pd.read_json(df_json, orient="records")
+    df = pd.read_json(io.StringIO(df_json), orient="records")
     df["fecha_inicio"] = pd.to_datetime(df["fecha_inicio"])
     df["fecha_fin"] = pd.to_datetime(df["fecha_fin"])
 
@@ -190,7 +191,7 @@ def actualizar_mesada_inflacion(inflacion_pct: int, df_json: str | None, datos: 
 def actualizar_canasta(estrato: int, inflacion_pct: int, df_json: str | None) -> go.Figure:
     if not df_json:
         return go.Figure()
-    df = pd.read_json(df_json, orient="records")
+    df = pd.read_json(io.StringIO(df_json), orient="records")
     df["fecha_inicio"] = pd.to_datetime(df["fecha_inicio"])
     df["fecha_fin"] = pd.to_datetime(df["fecha_fin"])
     ibl = calcular_ibl(df)

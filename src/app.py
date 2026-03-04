@@ -33,6 +33,7 @@ app.layout = dbc.Container(
 from src.components import formulario   # noqa: E402, F401
 from src.components import dashboard    # noqa: E402, F401
 from src.components import resumen      # noqa: E402, F401
+from src.components import timeline     # noqa: E402, F401
 
 
 @app.callback(

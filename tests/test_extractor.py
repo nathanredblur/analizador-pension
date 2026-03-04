@@ -62,3 +62,37 @@ def test_invalid_file_raises_error(tmp_path):
     fake_pdf.write_bytes(b"not a pdf")
     with pytest.raises(ExtractionError):
         extract_semanas_df(fake_pdf, password="")
+
+
+# --- Export tests ---
+
+def test_export_csv(sample_df, tmp_path):
+    out = tmp_path / "semanas.csv"
+    extract_semanas_df(PDF_PATH, password=PDF_PASSWORD, output_path=out)
+    assert out.exists()
+    loaded = pd.read_csv(out)
+    assert len(loaded) == len(sample_df)
+    assert "semanas" in loaded.columns
+
+
+def test_export_json(sample_df, tmp_path):
+    out = tmp_path / "semanas.json"
+    extract_semanas_df(PDF_PATH, password=PDF_PASSWORD, output_path=out)
+    assert out.exists()
+    loaded = pd.read_json(out)
+    assert len(loaded) == len(sample_df)
+
+
+def test_export_xlsx(sample_df, tmp_path):
+    out = tmp_path / "semanas.xlsx"
+    extract_semanas_df(PDF_PATH, password=PDF_PASSWORD, output_path=out)
+    assert out.exists()
+    loaded = pd.read_excel(out)
+    assert len(loaded) == len(sample_df)
+
+
+def test_no_export_by_default(sample_df, tmp_path):
+    """Calling without output_path writes nothing to disk."""
+    before = set(tmp_path.iterdir())
+    extract_semanas_df(PDF_PATH, password=PDF_PASSWORD)
+    assert set(tmp_path.iterdir()) == before

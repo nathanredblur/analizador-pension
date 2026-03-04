@@ -1,10 +1,12 @@
 """PDF extractor: Colpensiones 'Semanas Cotizadas' PDF → pandas DataFrame.
 
-All processing is in-memory — no files are written to disk.
+All processing is in-memory by default. Pass `output_path` to also save
+the extracted data to CSV, Excel, or JSON.
 """
 
 import io
 from pathlib import Path
+from typing import Literal
 
 import fitz  # pymupdf
 import pandas as pd
@@ -49,12 +51,21 @@ def _parse_decimal(value: str) -> float:
         return 0.0
 
 
-def extract_semanas_df(pdf_path: Path, password: str) -> pd.DataFrame:
+def extract_semanas_df(
+    pdf_path: Path,
+    password: str,
+    output_path: Path | None = None,
+    output_format: Literal["csv", "xlsx", "json"] = "csv",
+) -> pd.DataFrame:
     """Extract contribution history from a Colpensiones PDF into a DataFrame.
 
     Args:
         pdf_path: Path to the encrypted Colpensiones PDF.
         password: User password to decrypt the PDF (typically the cedula).
+        output_path: Optional path to save extracted data. If None, no file is
+            written. Format is inferred from the extension, or set via output_format.
+        output_format: Format to use when output_path has no recognizable extension.
+            One of "csv" (default), "xlsx", or "json".
 
     Returns:
         DataFrame with columns:
@@ -134,4 +145,23 @@ def extract_semanas_df(pdf_path: Path, password: str) -> pd.DataFrame:
         ["fecha_inicio", "fecha_fin", "empleador", "semanas", "salario", "lic", "sim", "nit_aportante"]
     ].reset_index(drop=True)
 
+    if output_path is not None:
+        _save_df(result, Path(output_path), output_format)
+
     return result
+
+
+def _save_df(
+    df: pd.DataFrame,
+    output_path: Path,
+    default_format: Literal["csv", "xlsx", "json"],
+) -> None:
+    """Write DataFrame to disk in the requested format."""
+    fmt = output_path.suffix.lstrip(".").lower() or default_format
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if fmt == "xlsx":
+        df.to_excel(output_path, index=False)
+    elif fmt == "json":
+        df.to_json(output_path, orient="records", date_format="iso", indent=2)
+    else:  # csv (default)
+        df.to_csv(output_path, index=False)

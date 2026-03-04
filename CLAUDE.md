@@ -13,7 +13,7 @@
 ## Comandos
 ```bash
 uv sync                    # instalar dependencias
-uv run python src/app.py   # iniciar servidor (localhost:8050)
+uv run python main.py      # iniciar servidor (localhost:8050)
 uv run pytest              # correr todos los tests
 uv run pytest tests/test_X.py -v  # test específico
 uv run ruff check src/     # lint

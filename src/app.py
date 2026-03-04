@@ -30,8 +30,9 @@ app.layout = dbc.Container(
 )
 
 # Importar callbacks después de crear app (evita importaciones circulares)
-from src.components import formulario  # noqa: E402, F401
-from src.components import dashboard   # noqa: E402, F401
+from src.components import formulario   # noqa: E402, F401
+from src.components import dashboard    # noqa: E402, F401
+from src.components import resumen      # noqa: E402, F401
 
 
 @app.callback(

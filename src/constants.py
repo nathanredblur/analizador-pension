@@ -48,6 +48,9 @@ TRANSICION_HISTORICO_ANIOS_COTIZADOS_MIN = 15
 # ─── TASA DE REEMPLAZO (Ley 100/797) ──────────────────────────────────────────
 TASA_REEMPLAZO_MIN = 0.65  # 65% con 1.300 semanas exactas
 TASA_REEMPLAZO_MAX = 0.80  # 80% con semanas adicionales
+SEMANAS_BASE_TASA = 1300
+INCREMENTO_SEMANAS_TASA = 50
+INCREMENTO_TASA_POR_BLOQUE = 0.015
 
 # ─── COTIZACIÓN OBLIGATORIA ────────────────────────────────────────────────────
 TASA_COTIZACION = 0.16  # 16% del salario base (empleado + empleador)

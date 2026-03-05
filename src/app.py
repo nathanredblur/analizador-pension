@@ -52,6 +52,7 @@ from src.components import salarios     # noqa: E402, F401
 from src.components import proyeccion   # noqa: E402, F401
 from src.components import ahorro       # noqa: E402, F401
 from src.components import simulador    # noqa: E402, F401
+from src.components import optimizacion  # noqa: E402, F401
 from src.components import transicion   # noqa: E402, F401
 from src.components import panel_lateral  # noqa: E402, F401
 

@@ -102,10 +102,15 @@ def render_resumen(df_json: str | None, datos: dict | None) -> html.Div:
     anios_rest = pension_info["anios_restantes"]
 
     # ── KPI cards ──
+    anios_f = int(faltantes // 52)
+    sem_rest = int(faltantes % 52)
+    sub_faltantes = f"≈ {anios_f} año(s) y {sem_rest} sem" if faltantes > 0 else "¡Meta alcanzada!"
+
     cards = dbc.Row([
         dbc.Col(_kpi_card("Semanas cotizadas", f"{cotizadas:,.2f}",
                           f"de {requeridas:,.0f} requeridas"), md=3, className="mb-3"),
         dbc.Col(_kpi_card("Semanas faltantes", f"{faltantes:,.0f}",
+                          sub=sub_faltantes,
                           color="danger" if faltantes > 0 else "success"), md=3, className="mb-3"),
         dbc.Col(_kpi_card("Edad actual / pensión", f"{edad} / {edad_pension} años"), md=3, className="mb-3"),
         dbc.Col(_kpi_card("Fecha estimada pensión",

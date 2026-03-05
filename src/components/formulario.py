@@ -103,6 +103,7 @@ def layout() -> dbc.Container:
                             size="lg",
                             className="w-100 mt-4",
                             n_clicks=0,
+                            disabled=True,
                         ),
                         html.Small(
                             "🔒 Todo se procesa localmente — ningún dato sale de tu navegador.",
@@ -128,6 +129,14 @@ def mostrar_nombre_archivo(contents: str | None, filename: str | None) -> tuple:
     if contents and filename:
         return f"✓ {filename}", {"contents": contents, "filename": filename}
     return "", None
+
+
+@callback(
+    Output("btn-analizar", "disabled"),
+    Input("store-upload-pdf", "data"),
+)
+def habilitar_boton(upload_data: dict | None) -> bool:
+    return upload_data is None
 
 
 @callback(

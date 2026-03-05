@@ -13,7 +13,10 @@ from src.constants import (
     DESCUENTO_SEMANAS_POR_HIJO,
     EDAD_PENSION_HOMBRE,
     EDAD_PENSION_MUJER,
+    INCREMENTO_SEMANAS_TASA,
+    INCREMENTO_TASA_POR_BLOQUE,
     MAX_HIJOS_DESCUENTO,
+    SEMANAS_BASE_TASA,
     SEMANAS_REQUERIDAS_HOMBRE,
     SEMANAS_REQUERIDAS_MUJER_POR_ANIO,
     TASA_REEMPLAZO_MAX,
@@ -105,6 +108,12 @@ def calcular_ibl(df: pd.DataFrame, anios: int = 10) -> float:
 def calcular_mesada(ibl: float) -> tuple[float, float]:
     """Retorna (mesada_min, mesada_max) = (65% IBL, 80% IBL)."""
     return ibl * TASA_REEMPLAZO_MIN, ibl * TASA_REEMPLAZO_MAX
+
+
+def calcular_tasa_reemplazo(semanas_cotizadas: float) -> float:
+    """65% + 1.5% por cada 50 sem sobre 1.300, máximo 80%."""
+    bloques = max(0.0, (semanas_cotizadas - SEMANAS_BASE_TASA) / INCREMENTO_SEMANAS_TASA)
+    return min(TASA_REEMPLAZO_MIN + bloques * INCREMENTO_TASA_POR_BLOQUE, TASA_REEMPLAZO_MAX)
 
 
 # ─── Transición y Traslado ────────────────────────────────────────────────────

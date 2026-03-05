@@ -62,6 +62,8 @@ def layout() -> dbc.Container:
                             html.Hr(),
                             html.Div(id="seccion-simulador"),
                             html.Hr(),
+                            html.Div(id="seccion-optimizacion"),
+                            html.Hr(),
                             html.Div(id="seccion-transicion"),
                         ],
                     ),

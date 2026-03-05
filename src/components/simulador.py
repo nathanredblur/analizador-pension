@@ -106,10 +106,15 @@ def calcular_simulacion(
     n_hijos_orig = int(datos.get("n_hijos", 0))
     n_hijos_sim = int(n_hijos_sim or 0)
     fecha_nac_str = datos.get("fecha_nac", "")
+    fecha_hoy_inner = date.today()
     try:
-        fecha_nac = date.fromisoformat(fecha_nac_str)
-    except (ValueError, TypeError):
-        fecha_nac = date(1980, 1, 1)
+        try:
+            fecha_nac = date.fromisoformat(fecha_nac_str)
+        except (ValueError, TypeError):
+            dia, mes, anio = fecha_nac_str.split("/")
+            fecha_nac = date(int(anio), int(mes), int(dia))
+    except Exception:
+        fecha_nac = date(fecha_hoy_inner.year - 40, 1, 1)
 
     fecha_hoy = date.today()
     semanas_extra_anio = semanas_extra_anio or 0

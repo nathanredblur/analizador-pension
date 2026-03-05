@@ -55,7 +55,10 @@ def _fig_gantt(df: pd.DataFrame) -> go.Figure:
             x1=str(g["fecha_fin"]),
             fillcolor="rgba(220,53,69,0.15)",
             line_width=0,
-            annotation_text=f"Gap {g['duracion_semanas']:.0f}sem",
+            annotation_text=(
+                f"↕ {g['fecha_inicio'].strftime('%b %y')}–{g['fecha_fin'].strftime('%b %y')}"
+                f" · {g['duracion_semanas']:.0f}sem"
+            ),
             annotation_position="top left",
             annotation_font_size=9,
             annotation_font_color="#dc3545",
@@ -69,6 +72,7 @@ def _fig_gantt(df: pd.DataFrame) -> go.Figure:
         height=max(200, len(df["empleador"].unique()) * 40 + 80),
         margin={"l": 10, "r": 10, "t": 40, "b": 30},
     )
+    fig.update_xaxes(dtick="M12", tickformat="%Y", ticklabelmode="instant")
     return fig
 
 
@@ -218,6 +222,7 @@ def _fig_acumulado(df: pd.DataFrame, sexo: str, n_hijos: int) -> go.Figure:
         margin={"l": 10, "r": 80, "t": 40, "b": 30},
         legend={"orientation": "h", "y": -0.15},
     )
+    fig.update_xaxes(dtick="M12", tickformat="%Y", ticklabelmode="instant")
     return fig
 
 
@@ -234,10 +239,43 @@ def render_timeline(df_json: str | None, datos: dict | None) -> html.Div:
 
     df, sexo, n_hijos = _parse_df(df_json, datos)
 
+    gaps = calcular_gaps(df, min_semanas=1.0)
+
+    gaps_table = None
+    if gaps:
+        header = html.Thead(html.Tr([
+            html.Th("Inicio"), html.Th("Fin"), html.Th("Semanas"), html.Th("Meses"),
+            html.Th("Empleador anterior → siguiente"),
+        ]))
+        rows = []
+        for g in gaps:
+            row_class = "table-danger" if g["duracion_semanas"] > 52 else ""
+            rows.append(html.Tr([
+                html.Td(g["fecha_inicio"].strftime("%b %Y")),
+                html.Td(g["fecha_fin"].strftime("%b %Y")),
+                html.Td(f"{g['duracion_semanas']:.0f}"),
+                html.Td(f"{g['duracion_dias'] // 30}"),
+                html.Td(f"{g['empleador_anterior']} → {g['empleador_siguiente']}"),
+            ], className=row_class))
+        gaps_table = html.Div([
+            html.H6("Brechas sin cotización", className="mt-2 mb-1 text-danger"),
+            dbc.Table(
+                [header, html.Tbody(rows)],
+                bordered=True, hover=True, responsive=True, size="sm", className="mb-3",
+            ),
+        ])
+
     return html.Div([
         html.H5("📅 Timeline de Aportes", className="mb-3"),
         dbc.Row([
             dbc.Col(dcc.Graph(figure=_fig_gantt(df), config={"displayModeBar": False}), md=12, className="mb-3"),
+            dbc.Col(gaps_table, md=12) if gaps_table else None,
+            dbc.Col(html.P(
+                "El mapa de calor muestra mes a mes si cotizaste (🟩 verde) o no (🟥 rojo). "
+                "Cada celda equivale a las semanas aportadas ese mes. Sirve para detectar "
+                "visualmente períodos de inactividad a lo largo de toda tu carrera.",
+                className="text-muted small mb-1",
+            ), md=12),
             dbc.Col(dcc.Graph(figure=_fig_heatmap(df), config={"displayModeBar": False}), md=12, className="mb-3"),
             dbc.Col(dcc.Graph(figure=_fig_acumulado(df, sexo, n_hijos), config={"displayModeBar": False}), md=12),
         ]),

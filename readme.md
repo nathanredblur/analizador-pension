@@ -499,11 +499,37 @@ git clone <repo>
 cd pension-analyzer
 uv sync
 
-# Ejecutar
+# Ejecutar la aplicación
 uv run src/app.py
+# Abrir en el navegador: http://localhost:8050
+```
 
-# Abrir en el navegador
-http://localhost:8050
+## 🧪 Comandos de Desarrollo
+
+```bash
+# Correr todos los tests
+uv run pytest -v
+
+# Tests E2E con browser visible (Playwright)
+uv run pytest tests/test_e2e.py --browser chromium --headed -v
+
+# Tests E2E sin browser (headless, más rápido)
+uv run pytest tests/test_e2e.py --browser chromium -v
+
+# Tests E2E lento para ver cada paso
+uv run pytest tests/test_e2e.py --browser chromium --headed --slowmo 500 -v
+
+# Solo tests unitarios (sin E2E)
+uv run pytest tests/ --ignore=tests/test_e2e.py -v
+
+# Coverage
+uv run pytest --cov=src --cov-report=term-missing
+
+# Lint
+uv run ruff check src/
+
+# Formatear código
+uv run ruff format src/
 ```
 
 ---

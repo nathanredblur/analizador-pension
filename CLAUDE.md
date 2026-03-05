@@ -60,3 +60,6 @@ semanas-cotizadas/
 
 ## Privacidad
 Todo en memoria — ningún dato se guarda en disco ni se envía a servidores.
+
+## Commits
+Never add `Co-Authored-By` lines to commit messages.

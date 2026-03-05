@@ -5,7 +5,7 @@ import io
 from datetime import date
 
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, dcc, html, callback
+from dash import Input, Output, State, dcc, html, callback, no_update
 
 
 def layout() -> dbc.Container:
@@ -119,12 +119,15 @@ def layout() -> dbc.Container:
 
 @callback(
     Output("upload-filename", "children"),
-    Input("upload-pdf", "filename"),
+    Output("store-upload-pdf", "data"),
+    Input("upload-pdf", "contents"),
+    State("upload-pdf", "filename"),
 )
-def mostrar_nombre_archivo(filename: str | None) -> str:
-    if filename:
-        return f"✓ {filename}"
-    return ""
+def mostrar_nombre_archivo(contents: str | None, filename: str | None) -> tuple:
+    """Muestra el nombre del archivo y guarda los contenidos en el store."""
+    if contents and filename:
+        return f"✓ {filename}", {"contents": contents, "filename": filename}
+    return "", None
 
 
 @callback(
@@ -140,8 +143,7 @@ def toggle_hijos(sexo: str) -> dict:
     Output("store-datos-usuario", "data"),
     Output("alerta-error", "children"),
     Input("btn-analizar", "n_clicks"),
-    State("upload-pdf", "contents"),
-    State("upload-pdf", "filename"),
+    State("store-upload-pdf", "data"),
     State("input-password", "value"),
     State("input-nombre", "value"),
     State("input-fecha-nac", "value"),
@@ -151,14 +153,15 @@ def toggle_hijos(sexo: str) -> dict:
 )
 def procesar_pdf(
     n_clicks: int,
-    pdf_contents: str | None,
-    filename: str | None,
+    upload_data: dict | None,
     password: str | None,
     nombre: str | None,
     fecha_nac: str | None,
     sexo: str,
     n_hijos: int | None,
 ) -> tuple:
+    pdf_contents = (upload_data or {}).get("contents")
+    filename = (upload_data or {}).get("filename")
     import os
     import tempfile
     from pathlib import Path
@@ -173,7 +176,7 @@ def procesar_pdf(
         ], color=color, dismissable=True)
 
     if not pdf_contents:
-        return None, None, _alerta(
+        return no_update, no_update, _alerta(
             "Selecciona un archivo PDF.",
             "Arrastra o haz clic en el área de carga para subir tu PDF de Colpensiones.",
             color="warning",
@@ -182,7 +185,7 @@ def procesar_pdf(
     # Validar que sea un PDF por extensión y cabecera
     fname = filename or ""
     if not fname.lower().endswith(".pdf"):
-        return None, None, _alerta(
+        return no_update, no_update, _alerta(
             "Formato incorrecto.",
             f"El archivo «{fname}» no es un PDF. Solo se aceptan archivos .pdf de Colpensiones.",
         )
@@ -191,14 +194,14 @@ def procesar_pdf(
         _header, b64_data = pdf_contents.split(",", 1)
         pdf_bytes = base64.b64decode(b64_data)
     except Exception:
-        return None, None, _alerta(
+        return no_update, no_update, _alerta(
             "Error al leer el archivo.",
             "No se pudo decodificar el archivo. Intenta de nuevo.",
         )
 
     # Validar cabecera PDF (%PDF-)
     if not pdf_bytes.startswith(b"%PDF-"):
-        return None, None, _alerta(
+        return no_update, no_update, _alerta(
             "El archivo no es un PDF válido.",
             f"El archivo «{fname}» no tiene el formato PDF esperado. "
             "Descarga el PDF directamente desde la app de Colpensiones.",
@@ -217,29 +220,29 @@ def procesar_pdf(
     except ExtractionError as exc:
         msg = str(exc).lower()
         if "password" in msg or "contrase" in msg or "incorrect" in msg or "encrypt" in msg:
-            return None, None, _alerta(
+            return no_update, no_update, _alerta(
                 "Contraseña incorrecta.",
                 "El PDF está protegido con contraseña. Ingresa tu número de cédula "
                 "(sin puntos ni espacios) en el campo 'Contraseña del PDF'.",
             )
         if "no table" in msg or "no se encontr" in msg or "tabla" in msg:
-            return None, None, _alerta(
+            return no_update, no_update, _alerta(
                 "No se encontró la tabla de semanas cotizadas.",
                 "El PDF no parece ser el reporte de semanas cotizadas de Colpensiones. "
                 "Descárgalo desde Mi Colpensiones → Historial de cotizaciones.",
             )
-        return None, None, _alerta(
+        return no_update, no_update, _alerta(
             "Error al extraer los datos del PDF.",
             f"Detalle técnico: {exc}",
         )
     except Exception as exc:  # noqa: BLE001
-        return None, None, _alerta(
+        return no_update, no_update, _alerta(
             "Error inesperado al procesar el PDF.",
             f"Detalle: {exc}",
         )
 
     if df.empty or df["semanas"].sum() == 0:
-        return None, None, _alerta(
+        return no_update, no_update, _alerta(
             "El PDF no contiene semanas cotizadas.",
             "Se procesó el archivo pero no se encontraron registros de cotización. "
             "Verifica que sea el reporte correcto.",

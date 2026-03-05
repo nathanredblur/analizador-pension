@@ -21,6 +21,7 @@ _stores = html.Div([
     dcc.Store(id="store-datos-usuario"),    # {nombre, fecha_nac, sexo, n_hijos}
     dcc.Store(id="store-mesada-media"),     # mesada media calculada (para ahorro.py)
     dcc.Store(id="store-anios-restantes"),  # años hasta pensión (para ahorro.py)
+    dcc.Store(id="store-upload-pdf"),       # contenido del PDF subido (base64 + filename)
 ])
 
 # Importar dashboard antes del layout para incluir sus IDs estáticamente.
@@ -65,6 +66,17 @@ def renderizar_fase(df_json: str | None) -> tuple:
     if df_json is None:
         return formulario.layout(), {"display": "none"}
     return html.Div(), {"display": "block"}
+
+
+@app.callback(
+    Output("store-df-semanas", "data", allow_duplicate=True),
+    Output("store-datos-usuario", "data", allow_duplicate=True),
+    Input("btn-salir", "n_clicks"),
+    prevent_initial_call=True,
+)
+def salir(_: int) -> tuple:
+    """Limpia los stores y regresa al formulario inicial."""
+    return None, None
 
 
 if __name__ == "__main__":

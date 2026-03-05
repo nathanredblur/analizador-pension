@@ -10,6 +10,31 @@ def layout() -> dbc.Container:
         fluid=True,
         className="p-0",
         children=[
+            # Encabezado
+            dbc.Navbar(
+                dbc.Container(
+                    fluid=True,
+                    children=[
+                        dbc.Button(
+                            [html.I(className="bi bi-arrow-left me-1"), "Salir"],
+                            id="btn-salir",
+                            color="outline-light",
+                            size="sm",
+                            n_clicks=0,
+                        ),
+                        dbc.NavbarBrand(
+                            "🏦 Analizador de Pensión Colombiana",
+                            className="mx-auto fw-semibold",
+                        ),
+                        # Espaciador para centrar el brand
+                        html.Div(style={"width": "80px"}),
+                    ],
+                    className="d-flex align-items-center",
+                ),
+                color="dark",
+                dark=True,
+                className="px-3 py-2",
+            ),
             dbc.Row(
                 className="g-0",
                 children=[

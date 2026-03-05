@@ -69,11 +69,19 @@ def render_resumen(df_json: str | None, datos: dict | None) -> html.Div:
     anio_actual = fecha_hoy.year
 
     try:
-        fecha_nac = date.fromisoformat(fecha_nac_str)
-        edad = (fecha_hoy - fecha_nac).days // 365
-    except (ValueError, TypeError):
-        fecha_nac = date(1980, 1, 1)
-        edad = anio_actual - 1980
+        try:
+            fecha_nac = date.fromisoformat(fecha_nac_str)
+        except (ValueError, TypeError):
+            # Intenta DD/MM/YYYY (formato colombiano)
+            dia, mes, anio = fecha_nac_str.split("/")
+            fecha_nac = date(int(anio), int(mes), int(dia))
+        edad = (
+            fecha_hoy.year - fecha_nac.year
+            - ((fecha_hoy.month, fecha_hoy.day) < (fecha_nac.month, fecha_nac.day))
+        )
+    except Exception:
+        fecha_nac = date(fecha_hoy.year - 40, 1, 1)
+        edad = 40
 
     edad_pension = 62 if sexo == "M" else 57
     cotizadas = float(df["semanas"].sum())

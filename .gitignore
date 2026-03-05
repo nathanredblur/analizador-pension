@@ -7,3 +7,4 @@ dist/
 .ruff_cache/
 .DS_Store
 *.pdf
+!tests/fixtures/sample_colpensiones.pdf

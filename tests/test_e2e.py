@@ -11,8 +11,13 @@ from pathlib import Path
 
 import pytest
 
-PDF_PATH = Path(__file__).parent.parent / "Semanas Cotizadas.pdf"
-PDF_PASSWORD = os.environ.get("SEMANAS_PDF_PASSWORD", "8177615")
+_REPO_ROOT = Path(__file__).parent.parent
+_REAL_PDF = _REPO_ROOT / "Semanas Cotizadas.pdf"
+_SAMPLE_PDF = _REPO_ROOT / "tests/fixtures/sample_colpensiones.pdf"
+
+# Use real PDF if present (local dev), otherwise fall back to synthetic sample.
+PDF_PATH = _REAL_PDF if _REAL_PDF.exists() else _SAMPLE_PDF
+PDF_PASSWORD = os.environ.get("SEMANAS_PDF_PASSWORD", "") if _REAL_PDF.exists() else ""
 BASE_URL = "http://localhost:18050"
 
 

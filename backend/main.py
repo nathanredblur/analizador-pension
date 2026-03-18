@@ -1,8 +1,10 @@
-from src.app import app
+"""Entry point — uvicorn server."""
+
+import uvicorn
 
 
 def main() -> None:
-    app.run(debug=True, host="0.0.0.0", port=8050)
+    uvicorn.run("src.api:app", host="0.0.0.0", port=8000, reload=True)
 
 
 if __name__ == "__main__":

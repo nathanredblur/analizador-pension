@@ -86,34 +86,3 @@ class TestFullPipeline:
         assert "arriendo" in canasta
 
 
-class TestDashApp:
-    def test_app_importa_sin_error(self):
-        import dash._callback as dcb
-        dcb.GLOBAL_CALLBACK_MAP.clear()
-        from src.app import app
-        assert app is not None
-
-    def test_server_responde_200(self):
-        import dash._callback as dcb
-        dcb.GLOBAL_CALLBACK_MAP.clear()
-        from src.app import app
-        with app.server.test_client() as c:
-            resp = c.get("/")
-            assert resp.status_code == 200
-
-    def test_callbacks_registrados(self):
-        import dash._callback as dcb
-        dcb.GLOBAL_CALLBACK_MAP.clear()
-        from src.app import app
-        with app.server.test_client() as c:
-            deps = c.get("/_dash-dependencies").get_json()
-            # Esperamos al menos 15 callbacks (todas las secciones)
-            assert len(deps) >= 15
-
-    def test_layout_disponible(self):
-        import dash._callback as dcb
-        dcb.GLOBAL_CALLBACK_MAP.clear()
-        from src.app import app
-        with app.server.test_client() as c:
-            resp = c.get("/_dash-layout")
-            assert resp.status_code == 200

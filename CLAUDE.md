@@ -1,52 +1,74 @@
 # Analizador de Pensión Colombiana — CLAUDE.md
 
 ## Stack Técnico
+
+### Backend (`backend/`)
 - **Runtime:** Python 3.13
 - **Gestor de proyecto:** UV (pyproject.toml / uv.lock)
-- **Framework web:** Plotly Dash 2.18+ con Dash Bootstrap Components
+- **API:** FastAPI (migración desde Dash en progreso)
 - **PDF:** pymupdf (PyMuPDF/fitz) + pikepdf (procesamiento en memoria, sin escritura a disco)
 - **Datos:** pandas DataFrames — todo efímero, destruido al cerrar sesión
-- **Gráficas:** Plotly Express + Graph Objects
 - **Tests:** pytest + pytest-cov
 - **Linting:** ruff
 
+### Frontend (`front/`)
+- **Runtime:** Node 22 LTS, ESM only
+- **Framework:** React + TypeScript + Vite
+- **UI:** shadcn/ui + Tailwind CSS v4
+- **Tests:** vitest
+
 ## Comandos
+
+### Backend
 ```bash
-uv sync                    # instalar dependencias
-uv run python main.py      # iniciar servidor (localhost:8050)
-uv run pytest              # correr todos los tests
-uv run pytest tests/test_X.py -v  # test específico
-uv run ruff check src/     # lint
-uv run ruff format src/    # format
+cd backend
+uv sync                          # instalar dependencias
+uv run python main.py            # iniciar servidor (localhost:8050, Dash legacy)
+uv run pytest                    # correr todos los tests
+uv run pytest tests/test_X.py -v # test específico
+uv run ruff check src/           # lint
+uv run ruff format src/          # format
+```
+
+### Frontend
+```bash
+cd front
+pnpm install        # instalar dependencias
+pnpm dev            # dev server (localhost:5173)
+pnpm build          # build producción
+pnpm test           # vitest
 ```
 
 ## Estructura del Proyecto
 ```
-semanas-cotizadas/
-├── pyproject.toml
-├── uv.lock
+analizador-pension/
 ├── CLAUDE.md
-├── readme.md
-├── src/
-│   ├── app.py               # Entry point Dash
-│   ├── constants.py         # Constantes normativa colombiana
-│   ├── extractor.py         # PDF → DataFrame en memoria
-│   ├── normativa.py         # Ley 100/797/2381, IBL, mesada
-│   ├── calculadoras.py      # Proyecciones, CDT, inflación, canasta
-│   └── components/
-│       ├── formulario.py    # Upload + datos usuario
-│       ├── resumen.py       # KPI Cards + alertas
-│       ├── timeline.py      # Gantt + heatmap + acumulado
-│       ├── salarios.py      # Análisis salarial
-│       ├── proyeccion.py    # Proyección pensional + canasta
-│       ├── ahorro.py        # Calculadora CDT
-│       ├── simulador.py     # Simulador ¿Y si...?
-│       └── transicion.py    # Régimen Transición Ley 2381
-└── tests/
-    ├── test_extractor.py
-    ├── test_normativa.py
-    ├── test_calculadoras.py
-    └── test_components/     # (cuando sea necesario)
+├── .gitignore
+├── backend/
+│   ├── pyproject.toml
+│   ├── uv.lock
+│   ├── main.py
+│   ├── readme.md
+│   ├── src/
+│   │   ├── app.py               # Entry point Dash (legacy)
+│   │   ├── constants.py         # Constantes normativa colombiana
+│   │   ├── extractor.py         # PDF → DataFrame en memoria
+│   │   ├── normativa.py         # Ley 100/797/2381, IBL, mesada
+│   │   ├── calculadoras.py      # Proyecciones, CDT, inflación, canasta
+│   │   └── components/          # Dash components (legacy)
+│   └── tests/
+│       ├── test_extractor.py
+│       ├── test_normativa.py
+│       ├── test_calculadoras.py
+│       └── test_components.py
+└── front/
+    ├── package.json
+    ├── vite.config.ts
+    ├── src/
+    │   ├── App.tsx
+    │   ├── lib/                 # Business logic (TS port)
+    │   └── components/ui/       # shadcn components
+    └── public/
 ```
 
 ## Normativa Colombiana — Puntos Clave

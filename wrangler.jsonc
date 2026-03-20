@@ -1,0 +1,13 @@
+{
+	"name": "aanalizador-pension",
+	"compatibility_date": "2026-02-02",
+	"assets": {
+		"directory": "./dist"
+	},
+	"routes": [
+		{
+			"pattern": "pension.nathanredblur.dev",
+			"custom_domain": true
+		}
+	]
+}
